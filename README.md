@@ -23,6 +23,8 @@ You should plan to spend around 1 to 3 hours to complete the exercise.
 ---
 # Changelog
 
+_**NOTE**: These changes are all based on assuptions. In a real world scenario, I'd be asking questions around the functional and non functional requirements._
+
 ## Guard Clause
 The `MakePaymentResult MakePayment(MakePaymentRequest request)` needs guard clauses and input validation.
 We can exit early if the guard clauses and input validation fails.
