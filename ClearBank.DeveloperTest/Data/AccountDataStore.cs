@@ -1,8 +1,9 @@
-﻿using ClearBank.DeveloperTest.Types;
+﻿using System.Threading.Tasks;
+using ClearBank.DeveloperTest.Types;
 
 namespace ClearBank.DeveloperTest.Data
 {
-    public class AccountDataStore
+    public class AccountDataStore : IDataStore
     {
         public Account GetAccount(string accountNumber)
         {

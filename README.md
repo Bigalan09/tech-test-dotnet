@@ -25,6 +25,18 @@ You should plan to spend around 1 to 3 hours to complete the exercise.
 
 _**NOTE**: These changes are all based on assuptions. In a real world scenario, I'd be asking questions around the functional and non functional requirements._
 
+- [x] Guard Clause
+- [x] Data store
+- [x] MakePaymentResult static factory
+- [ ] AllowedPaymentScheme enum
+- [ ] Payment scheme policy checks
+- [ ] Unit of work
+- [ ] Idempotency
+- [ ] Outbox pattern
+- [ ] Ledger
+- [ ] Observability
+- [ ] Concurrency issues
+
 ## Guard Clause
 The `MakePaymentResult MakePayment(MakePaymentRequest request)` needs guard clauses and input validation.
 We can exit early if the guard clauses and input validation fails.
