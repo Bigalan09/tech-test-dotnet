@@ -26,6 +26,7 @@ You should plan to spend around 1 to 3 hours to complete the exercise.
 _**NOTE**: These changes are all based on assuptions. In a real world scenario, I'd be asking questions around the functional and non functional requirements._
 
 - [x] Guard Clause
+- [ ] Observation 2 - Validator classes and domain models.
 - [x] Data store
 - [x] MakePaymentResult static factory
 - [ ] AllowedPaymentScheme enum
@@ -40,6 +41,7 @@ _**NOTE**: These changes are all based on assuptions. In a real world scenario, 
 ## Guard Clause
 The `MakePaymentResult MakePayment(MakePaymentRequest request)` needs guard clauses and input validation.
 We can exit early if the guard clauses and input validation fails.
+Observation 2: I'd also make use of domain models and validators within the domain model, decoupling the validation from the payment method and simplifying tests.
 
 ## Data store
 The `MakePaymentResult MakePayment(MakePaymentRequest request)` is doing a lot, it's not the role of the payment service to determine which datastore to use. 

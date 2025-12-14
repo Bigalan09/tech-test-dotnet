@@ -15,6 +15,9 @@ namespace ClearBank.DeveloperTest.Services
             Account account = dataStore.GetAccount(request.DebtorAccountNumber);
             if (account == null)
                 return MakePaymentResult.Rejected("Account not found.");
+            
+            account.Balance -= request.Amount;
+            dataStore.UpdateAccount(account);
 
             return MakePaymentResult.Success();
         }
