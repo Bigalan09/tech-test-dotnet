@@ -26,11 +26,11 @@ You should plan to spend around 1 to 3 hours to complete the exercise.
 _**NOTE**: These changes are all based on assuptions. In a real world scenario, I'd be asking questions around the functional and non functional requirements._
 
 - [x] Guard Clause
-- [ ] Observation 2 - Validator classes and domain models.
+  - [ ] Observation 2 - Validator classes and domain models.
 - [x] Data store
 - [x] MakePaymentResult static factory
-- [ ] AllowedPaymentScheme enum
-- [ ] Payment scheme policy checks
+- [x] AllowedPaymentScheme enum
+- [x] Payment scheme policy checks
 - [ ] Unit of work
 - [ ] Idempotency
 - [ ] Outbox pattern
