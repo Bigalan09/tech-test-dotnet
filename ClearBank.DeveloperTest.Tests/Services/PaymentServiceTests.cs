@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using AutoFixture;
 using AutoFixture.Xunit2;
 using ClearBank.DeveloperTest.Data;
+using ClearBank.DeveloperTest.PaymentPolicies;
 using ClearBank.DeveloperTest.Services;
 using ClearBank.DeveloperTest.Tests.Common;
 using ClearBank.DeveloperTest.Types;
@@ -18,17 +20,13 @@ public class PaymentServiceTests
     [InlineCustomAutoData(-10.0)]
     internal void MakePayment_ReturnsPaymentRejected_WhenPaymentAmountIsInvalid(
         decimal paymentAmount,
-        PaymentService sut)
+        PaymentService sut,
+        IFixture fixture)
     {
         // Arrange
-        var request = new MakePaymentRequest
-        {
-            DebtorAccountNumber = "",
-            CreditorAccountNumber = "",
-            Amount = paymentAmount,
-            PaymentScheme = PaymentScheme.FasterPayments,
-            PaymentDate = DateTime.Now,
-        };
+        var request = fixture.Build<MakePaymentRequest>()
+            .With(x => x.Amount, paymentAmount)
+            .Create();
         
         // Act
         var actual = sut.MakePayment(request);
@@ -42,17 +40,13 @@ public class PaymentServiceTests
     [Theory]
     [CustomAutoData]
     internal void MakePayment_ReturnsPaymentRejected_WhenDebtorAccountNumberIsInvalid(
-        PaymentService sut)
+        PaymentService sut,
+        IFixture fixture)
     {
         // Arrange
-        var request = new MakePaymentRequest
-        {
-            DebtorAccountNumber = "",
-            CreditorAccountNumber = "",
-            Amount = 1,
-            PaymentScheme = PaymentScheme.FasterPayments,
-            PaymentDate = DateTime.Now,
-        };
+        var request = fixture.Build<MakePaymentRequest>()
+            .With(x => x.DebtorAccountNumber, string.Empty)
+            .Create();
         
         // Act
         var actual = sut.MakePayment(request);
@@ -82,5 +76,127 @@ public class PaymentServiceTests
         actual.IsSuccess.ShouldBeFalse();
         actual.Reason.ShouldNotBeNull();
         actual.Reason.ShouldBe("Account not found.");
+    }
+
+    [Theory]
+    [CustomAutoData]
+    internal void MakePayment_ReturnsPaymentRejected_WhenPolicyDecisionIsRejected(
+        [Frozen] IDataStore dataStore,
+        [Frozen] IPaymentSchemeRules paymentSchemeRules,
+        [Frozen] IPaymentPolicy paymentPolicy,
+        PaymentService sut,
+        IFixture fixture)
+    {
+        // Arrange
+        decimal paymentAmount = 10;
+        decimal accountBalance = 100;
+
+        var request = fixture
+            .Build<MakePaymentRequest>()
+            .With(x => x.Amount, paymentAmount)
+            .Create();
+        
+        var account = fixture
+            .Build<Account>()
+            .With(x => x.Balance, accountBalance)
+            .Create();
+        
+        dataStore.GetAccount(request.DebtorAccountNumber).Returns(account);
+        paymentSchemeRules.For(request.PaymentScheme).Returns(paymentPolicy);
+        
+        paymentPolicy
+            .Evaluate(account, request)
+            .Returns(PaymentDecision.Reject(PaymentRejectionReason.SchemeNotAllowed));
+
+        // Act
+        var actual = sut.MakePayment(request);
+
+        // Assert
+        actual.IsSuccess.ShouldBeFalse();
+        actual.Reason.ShouldBe(nameof(PaymentRejectionReason.SchemeNotAllowed));
+
+        dataStore.DidNotReceive().UpdateAccount(Arg.Any<Account>());
+    }
+
+    [Theory]
+    [CustomAutoData]
+    internal void MakePayment_ReturnsPaymentSuccess_WhenPolicyDecisionIsApproved(
+        [Frozen] IDataStore dataStore,
+        [Frozen] IPaymentSchemeRules paymentSchemeRules,
+        [Frozen] IPaymentPolicy paymentPolicy,
+        PaymentService sut,
+        IFixture fixture)
+    {
+        // Arrange
+        decimal paymentAmount = 10;
+        decimal accountBalance = 100;
+
+        var request = fixture
+            .Build<MakePaymentRequest>()
+            .With(x => x.Amount, paymentAmount)
+            .Create();
+        
+        var account = fixture
+            .Build<Account>()
+            .With(x => x.Balance, accountBalance)
+            .Create();
+        
+        dataStore.GetAccount(request.DebtorAccountNumber).Returns(account);
+        paymentSchemeRules.For(request.PaymentScheme).Returns(paymentPolicy);
+        
+        paymentPolicy
+            .Evaluate(account, request)
+            .Returns(PaymentDecision.Approve());
+
+        // Act
+        var actual = sut.MakePayment(request);
+
+        // Assert
+        actual.IsSuccess.ShouldBeTrue();
+        actual.Reason.ShouldBeNull();
+
+        account.Balance.ShouldBe(90m);
+        dataStore.Received(1).UpdateAccount(account);
+    }
+    
+    [Theory]
+    [CustomAutoData]
+    internal void MakePayment_ReturnsPaymentSuccess_WhenAccountBalanceEqualsAmount(
+        [Frozen] IDataStore dataStore,
+        [Frozen] IPaymentSchemeRules paymentSchemeRules,
+        [Frozen] IPaymentPolicy paymentPolicy,
+        PaymentService sut,
+        IFixture fixture)
+    {
+        // Arrange
+        decimal paymentAmount = 10;
+        decimal accountBalance = 10;
+
+        var request = fixture
+            .Build<MakePaymentRequest>()
+            .With(x => x.Amount, paymentAmount)
+            .Create();
+        
+        var account = fixture
+            .Build<Account>()
+            .With(x => x.Balance, accountBalance)
+            .Create();
+        
+        dataStore.GetAccount(request.DebtorAccountNumber).Returns(account);
+        paymentSchemeRules.For(request.PaymentScheme).Returns(paymentPolicy);
+        
+        paymentPolicy
+            .Evaluate(account, request)
+            .Returns(PaymentDecision.Approve());
+
+        // Act
+        var actual = sut.MakePayment(request);
+
+        // Assert
+        actual.IsSuccess.ShouldBeTrue();
+        actual.Reason.ShouldBeNull();
+
+        account.Balance.ShouldBe(0m);
+        dataStore.Received(1).UpdateAccount(account);
     }
 }
