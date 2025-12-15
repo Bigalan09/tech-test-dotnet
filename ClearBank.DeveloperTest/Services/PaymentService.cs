@@ -1,4 +1,5 @@
 using ClearBank.DeveloperTest.Data;
+using ClearBank.DeveloperTest.Extensions;
 using ClearBank.DeveloperTest.PaymentPolicies;
 using ClearBank.DeveloperTest.Types;
 
@@ -10,6 +11,7 @@ namespace ClearBank.DeveloperTest.Services
         {
             if (request.Amount <= 0)
                 return MakePaymentResult.Rejected("Invalid amount.");
+            
             if (string.IsNullOrWhiteSpace(request.DebtorAccountNumber))
                 return MakePaymentResult.Rejected("Invalid debtor account number.");
 
@@ -21,12 +23,12 @@ namespace ClearBank.DeveloperTest.Services
             var paymentDecision = schemePolicy.Evaluate(account, request);
 
             if (paymentDecision.IsRejected)
-                return MakePaymentResult.Rejected(paymentDecision.PaymentRejectionReason?.ToString() ?? "Unknown reason.");
+                return MakePaymentResult.Rejected(paymentDecision.PaymentRejectionReason!.Value.ToReasonString());
 
             account.Balance -= request.Amount;
             dataStore.UpdateAccount(account);
 
-            return MakePaymentResult.Success();
+            return MakePaymentResult.Accepted();
         }
     }
 }

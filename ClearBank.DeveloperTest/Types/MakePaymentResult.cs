@@ -2,19 +2,25 @@
 
 namespace ClearBank.DeveloperTest.Types
 {
-    public sealed class MakePaymentResult
+    public class MakePaymentResult
     {
-        private MakePaymentResult(bool isSuccess, string reason)
+        public MakePaymentResult()
+        {
+        }
+        
+        private MakePaymentResult(bool isSuccess, string? reason)
         {
             IsSuccess = isSuccess;
             Reason = reason;
         }
 
         public bool IsSuccess { get; }
+        
+        public bool Success => IsSuccess;
 
-        public string Reason { get; }
+        public string? Reason { get; } = null;
 
-        public static MakePaymentResult Success()
+        public static MakePaymentResult Accepted() 
             => new(true, null);
 
         public static MakePaymentResult Rejected(string reason)

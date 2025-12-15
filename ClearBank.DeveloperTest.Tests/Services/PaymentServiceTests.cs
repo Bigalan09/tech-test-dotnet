@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AutoFixture;
 using AutoFixture.Xunit2;
 using ClearBank.DeveloperTest.Data;
+using ClearBank.DeveloperTest.Extensions;
 using ClearBank.DeveloperTest.PaymentPolicies;
 using ClearBank.DeveloperTest.Services;
 using ClearBank.DeveloperTest.Tests.Common;
@@ -20,6 +21,7 @@ public class PaymentServiceTests
     [InlineCustomAutoData(-10.0)]
     internal void MakePayment_ReturnsPaymentRejected_WhenPaymentAmountIsInvalid(
         decimal paymentAmount,
+        [Frozen] IDataStore dataStore,
         PaymentService sut,
         IFixture fixture)
     {
@@ -35,12 +37,15 @@ public class PaymentServiceTests
         actual.IsSuccess.ShouldBeFalse();
         actual.Reason.ShouldNotBeNull();
         actual.Reason.ShouldBe("Invalid amount.");
+        
+        dataStore.DidNotReceive().UpdateAccount(Arg.Any<Account>());
     }
     
     [Theory]
     [CustomAutoData]
     internal void MakePayment_ReturnsPaymentRejected_WhenDebtorAccountNumberIsInvalid(
         PaymentService sut,
+        [Frozen] IDataStore dataStore,
         IFixture fixture)
     {
         // Arrange
@@ -55,6 +60,8 @@ public class PaymentServiceTests
         actual.IsSuccess.ShouldBeFalse();
         actual.Reason.ShouldNotBeNull();
         actual.Reason.ShouldBe("Invalid debtor account number.");
+
+        dataStore.DidNotReceive().UpdateAccount(Arg.Any<Account>());
     }
     
     [Theory]
@@ -76,6 +83,9 @@ public class PaymentServiceTests
         actual.IsSuccess.ShouldBeFalse();
         actual.Reason.ShouldNotBeNull();
         actual.Reason.ShouldBe("Account not found.");
+        
+        dataStore.DidNotReceive().UpdateAccount(Arg.Any<Account>());
+        
     }
 
     [Theory]
@@ -95,15 +105,15 @@ public class PaymentServiceTests
             .Build<MakePaymentRequest>()
             .With(x => x.Amount, paymentAmount)
             .Create();
-        
+
         var account = fixture
             .Build<Account>()
             .With(x => x.Balance, accountBalance)
             .Create();
-        
+
         dataStore.GetAccount(request.DebtorAccountNumber).Returns(account);
         paymentSchemeRules.For(request.PaymentScheme).Returns(paymentPolicy);
-        
+
         paymentPolicy
             .Evaluate(account, request)
             .Returns(PaymentDecision.Reject(PaymentRejectionReason.SchemeNotAllowed));
@@ -113,7 +123,7 @@ public class PaymentServiceTests
 
         // Assert
         actual.IsSuccess.ShouldBeFalse();
-        actual.Reason.ShouldBe(nameof(PaymentRejectionReason.SchemeNotAllowed));
+        actual.Reason.ShouldBe(PaymentRejectionReason.SchemeNotAllowed.ToReasonString());
 
         dataStore.DidNotReceive().UpdateAccount(Arg.Any<Account>());
     }
