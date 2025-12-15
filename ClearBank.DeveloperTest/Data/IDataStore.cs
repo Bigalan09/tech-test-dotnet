@@ -5,7 +5,7 @@ namespace ClearBank.DeveloperTest.Data;
 
 public interface IDataStore
 {
-    Account GetAccount(string requestDebtorAccountNumber);
+    Account? GetAccount(string requestDebtorAccountNumber);
 
     void UpdateAccount(Account account);
 }

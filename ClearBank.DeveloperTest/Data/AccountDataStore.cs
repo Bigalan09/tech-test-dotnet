@@ -5,7 +5,7 @@ namespace ClearBank.DeveloperTest.Data
 {
     internal class AccountDataStore : IDataStore
     {
-        public Account GetAccount(string accountNumber)
+        public Account? GetAccount(string accountNumber)
         {
             // Access database to retrieve account, code removed for brevity 
             return new Account();
